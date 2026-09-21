@@ -28,280 +28,378 @@ def render_page(page: Page) -> str:
 <title>jev-desk</title>
 <style>
 :root {{
-  --desk: #e5ded1;
-  --paper: #fbf7f0;
-  --ink: #1c1915;
-  --muted: #5e564c;
-  --rule: #d5cbbd;
-  --stamp: #8f2d24;
-  --fill: #1c1915;
-  --track: #e7e0d4;
-  --live: #1d4e45;
-  --sample: #8a5a12;
-  --shadow: 0 18px 40px rgba(48, 36, 18, 0.08);
-  --serif: "Liberation Serif", "DejaVu Serif", Georgia, serif;
-  --sans: Inter, "Liberation Sans", "Noto Sans", sans-serif;
-  --mono: "JetBrains Mono", "Liberation Mono", ui-monospace, monospace;
+  --bg: #f5f5f7;
+  --surface: #ffffff;
+  --ink: #1d1d1f;
+  --muted: #6e6e73;
+  --line: rgba(0, 0, 0, 0.08);
+  --blue: #0071e3;
+  --blue-press: #0077ed;
+  --track: #e8e8ed;
+  --fill: #1d1d1f;
+  --sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }}
 * {{ box-sizing: border-box; }}
+html {{ scroll-behavior: smooth; }}
 body {{
   margin: 0;
   min-height: 100vh;
   color: var(--ink);
-  background: var(--desk);
+  background:
+    radial-gradient(900px 420px at 50% -80px, #ffffff 0%, rgba(255, 255, 255, 0) 70%),
+    var(--bg);
   font-family: var(--sans);
-  font-size: 16px;
-  line-height: 1.45;
+  font-size: 17px;
+  line-height: 1.47;
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
 }}
-.wrap {{
-  max-width: 1080px;
+.nav {{
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--line);
+}}
+.nav-inner {{
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 0 1.25rem;
-}}
-.mast {{ background: #161411; color: #f6f1e7; }}
-.mast-row {{
+  padding: 0 28px;
+  height: 52px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 1.5rem;
-  align-items: flex-end;
-  padding: 1.35rem 0 1.4rem;
+  gap: 24px;
 }}
-main.wrap {{ padding-top: 1.25rem; padding-bottom: 3rem; }}
-.brand {{
-  font-family: var(--serif);
-  font-size: 2.6rem;
-  line-height: 0.9;
-  letter-spacing: -0.03em;
+.wordmark {{
   margin: 0;
-  color: #f7f1e6;
-}}
-.tagline {{
-  margin: 0.5rem 0 0;
-  max-width: 30rem;
-  font-family: var(--serif);
-  font-size: 1.18rem;
-  font-weight: 400;
-  color: #e7dccb;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }}
 .mode {{
   margin: 0;
-  max-width: 18rem;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid currentColor;
-  font-size: 0.82rem;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: right;
+  max-width: 28rem;
 }}
-.mode.live {{ color: #d7efe8; border-color: #8fbfb3; }}
-.mode.sample {{ color: #3d2c10; background: #f3e2c4; border-color: #f3e2c4; }}
+.mode.live {{ color: #1d1d1f; }}
+.wrap {{
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 28px 72px;
+}}
+.hero {{ padding: 72px 0 36px; }}
+.eyebrow {{
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+}}
+.tagline {{
+  margin: 0;
+  max-width: 16ch;
+  font-size: clamp(40px, 6vw, 72px);
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+}}
+.lede {{
+  margin: 18px 0 0;
+  max-width: 34rem;
+  color: var(--muted);
+  font-size: 21px;
+  line-height: 1.38;
+  letter-spacing: -0.016em;
+}}
 .desk {{
   display: grid;
-  grid-template-columns: minmax(280px, 0.92fr) minmax(320px, 1.08fr);
-  gap: 1rem;
+  grid-template-columns: minmax(300px, 0.92fr) minmax(340px, 1.08fr);
+  gap: 20px;
   align-items: start;
 }}
 .card {{
-  background: var(--paper);
-  border: 1px solid var(--rule);
-  box-shadow: var(--shadow);
-  padding: 1.1rem 1.15rem 1.2rem;
+  background: var(--surface);
+  border-radius: 28px;
+  padding: 28px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
 }}
 h2 {{
-  margin: 0 0 0.7rem;
-  font-family: var(--serif);
-  font-size: 1.35rem;
-  font-weight: 400;
+  margin: 0 0 16px;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
 }}
-label {{ display: block; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }}
+label {{
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+}}
 textarea {{
   width: 100%;
-  margin-top: 0.4rem;
-  min-height: 9.5rem;
+  min-height: 160px;
   resize: vertical;
-  padding: 0.75rem 0.8rem;
-  border: 1px solid var(--rule);
-  background: #fffdf9;
+  padding: 16px 18px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--bg);
   color: var(--ink);
-  font: 1rem/1.45 var(--sans);
+  font: 17px/1.47 var(--sans);
+  letter-spacing: -0.011em;
 }}
-textarea:focus, button:focus-visible {{
-  outline: 2px solid var(--ink);
+textarea:focus {{
+  outline: 2px solid var(--blue);
   outline-offset: 2px;
 }}
-.actions {{ display: flex; justify-content: space-between; gap: 0.75rem; align-items: center; margin-top: 0.75rem; }}
-button, .samples button {{
-  font: 600 0.92rem/1 var(--sans);
-  color: var(--paper);
-  background: var(--ink);
-  border: 1px solid var(--ink);
-  padding: 0.72rem 0.9rem;
-  cursor: pointer;
-}}
-button:hover, .samples button:hover {{ background: #322c26; }}
-.hint {{ margin: 0; color: var(--muted); font-size: 0.82rem; }}
-.samples {{ margin-top: 1.15rem; }}
-.samples h3 {{
-  margin: 0 0 0.45rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}}
-.samples form {{ margin: 0 0 0.4rem; }}
-.samples button {{
-  width: 100%;
-  text-align: left;
-  color: var(--ink);
-  background: transparent;
-  border-color: var(--rule);
-  font-weight: 450;
-  line-height: 1.35;
-  padding: 0.55rem 0.7rem;
-}}
-.samples button:hover {{ background: #f3ece2; }}
-.notice {{
-  margin: 0 0 0.8rem;
-  padding: 0.55rem 0.7rem;
-  background: #f8efe3;
-  border-left: 3px solid var(--sample);
-}}
-.slip {{ min-height: 100%; }}
-.queue {{
+.actions {{
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
-  align-items: flex-start;
-  padding-bottom: 0.9rem;
-  margin-bottom: 0.9rem;
-  border-bottom: 1px solid var(--rule);
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
 }}
-.kicker {{
-  margin: 0 0 0.35rem;
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+button {{
+  border: 0;
+  border-radius: 980px;
+  background: var(--blue);
+  color: #fff;
+  font: 600 17px/1 var(--sans);
+  letter-spacing: -0.015em;
+  padding: 12px 22px;
+  cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease;
+}}
+button:hover {{ background: var(--blue-press); }}
+button:active {{ transform: scale(0.98); }}
+button:focus-visible {{
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+}}
+.hint {{ margin: 0; color: var(--muted); font-size: 13px; }}
+.samples {{ margin-top: 28px; }}
+.samples h3 {{
+  margin: 0 0 8px;
   color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+}}
+.samples form {{ margin: 0; }}
+.samples button {{
+  width: 100%;
+  margin-top: 8px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--bg);
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.35;
+  text-align: left;
+}}
+.samples button:hover {{ background: #e8e8ed; }}
+.notice {{
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #f5f5f7;
+  color: var(--ink);
+  font-size: 15px;
+}}
+.slip {{ min-height: 100%; }}
+.queue {{ margin-bottom: 22px; }}
+.kicker {{
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }}
 .queue-name {{
   margin: 0;
-  font-family: var(--serif);
-  font-size: 2.7rem;
-  line-height: 0.95;
-  letter-spacing: -0.03em;
+  font-size: clamp(48px, 6vw, 80px);
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
 }}
-.queue-name[data-queue="billing"] {{ color: #8f2d24; }}
-.queue-name[data-queue="on-call"] {{ color: #8a3b12; }}
-.queue-name[data-queue="human-review"] {{ color: #6d4e12; }}
-.queue-name[data-queue="technical"] {{ color: #1d4e45; }}
-.queue-name[data-queue="sales"] {{ color: #2a3b78; }}
-.queue-reason {{ margin: 0.35rem 0 0; font-size: 1rem; }}
+.queue-reason {{
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 21px;
+  letter-spacing: -0.016em;
+}}
 .stamp {{
-  flex: 0 0 auto;
-  margin-top: 0.2rem;
-  padding: 0.35rem 0.5rem;
-  border: 2px solid var(--stamp);
-  color: var(--stamp);
-  font-family: var(--mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  transform: rotate(-2deg);
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
 }}
 .message {{
-  margin: 0 0 1rem;
-  padding: 0.7rem 0.8rem;
-  background: #f3eee6;
+  margin: 0 0 28px;
+  padding: 0;
+  border: 0;
+  color: var(--ink);
+  font-size: 19px;
+  line-height: 1.4;
+  letter-spacing: -0.016em;
   white-space: pre-wrap;
 }}
-.answers {{ display: grid; gap: 0.85rem; }}
+.answers {{ display: grid; gap: 22px; }}
+.answer {{
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}}
 .answer h3 {{
   margin: 0;
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
   color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }}
 .chosen {{
   display: flex;
   justify-content: space-between;
-  gap: 0.75rem;
   align-items: baseline;
-  margin: 0.15rem 0 0.45rem;
+  gap: 16px;
+  margin: 4px 0 12px;
 }}
-.chosen strong {{ font-family: var(--serif); font-size: 1.45rem; font-weight: 400; }}
-.meta {{ margin: 0; color: var(--muted); font-family: var(--mono); font-size: 0.78rem; }}
-ul.probs {{ list-style: none; margin: 0; padding: 0; display: grid; gap: 0.28rem; }}
+.chosen strong {{
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}}
+.meta {{
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}}
+ul.probs {{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}}
 ul.probs li {{
   display: grid;
-  grid-template-columns: 6.5rem 1fr 3.2rem;
-  gap: 0.45rem;
+  grid-template-columns: 92px 1fr 44px;
+  gap: 10px;
   align-items: center;
-  font-size: 0.86rem;
+  color: var(--muted);
+  font-size: 14px;
 }}
-ul.probs li.picked .name {{ font-weight: 650; }}
-.track {{ height: 0.45rem; background: var(--track); }}
-.fill {{ display: block; height: 100%; background: #b7aea0; }}
-li.picked .fill {{ background: var(--fill); }}
-.value {{ font-family: var(--mono); font-size: 0.78rem; text-align: right; }}
-.refund .track {{ height: 0.7rem; }}
+ul.probs li.picked {{ color: var(--ink); font-weight: 600; }}
+.track {{
+  height: 6px;
+  border-radius: 999px;
+  background: var(--track);
+  overflow: hidden;
+}}
+.fill {{
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #c7c7cc;
+  transition: width 480ms ease;
+}}
+li.picked .fill {{ background: var(--ink); }}
+.value {{
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}}
 .footnote {{
-  margin: 1rem 0 0;
+  margin: 22px 0 0;
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 13px;
 }}
-.empty {{
-  min-height: 18rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+.empty h2 {{
+  margin: 0;
+  font-size: clamp(40px, 5vw, 64px);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  color: #86868b;
 }}
-.empty p {{ margin: 0.3rem 0 0; max-width: 26rem; }}
-.rules {{ margin: 0.8rem 0 0; padding-left: 1.1rem; color: var(--muted); font-size: 0.88rem; }}
+.empty p {{ margin: 14px 0 0; max-width: 36rem; color: var(--muted); font-size: 19px; }}
+.rules {{
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 15px;
+}}
+.rules li {{
+  padding-left: 16px;
+  border-left: 2px solid #d2d2d7;
+}}
 footer {{
-  margin-top: 1rem;
+  margin-top: 28px;
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 12px;
+  text-align: center;
 }}
-@media (max-width: 800px) {{
-  .mast-row {{ flex-direction: column; align-items: flex-start; }}
-  .mode {{ max-width: none; }}
+@media (max-width: 860px) {{
+  .nav-inner {{ height: auto; padding: 12px 20px; align-items: flex-start; flex-direction: column; gap: 4px; }}
+  .mode {{ text-align: left; max-width: none; }}
+  .wrap {{ padding: 0 20px 56px; }}
+  .hero {{ padding: 40px 0 24px; }}
+  .tagline {{ max-width: 12ch; }}
+  .lede {{ font-size: 19px; }}
   .desk {{ grid-template-columns: 1fr; }}
-  .queue-name {{ font-size: 2.2rem; }}
-  ul.probs li {{ grid-template-columns: 5.6rem 1fr 2.8rem; }}
+  .card {{ border-radius: 22px; padding: 22px; }}
+  .actions {{ flex-direction: column; align-items: stretch; }}
+  button {{ width: 100%; }}
+  ul.probs li {{ grid-template-columns: 78px 1fr 40px; }}
+}}
+@media (prefers-reduced-motion: reduce) {{
+  html {{ scroll-behavior: auto; }}
+  .fill, button {{ transition: none; }}
 }}
 </style>
 </head>
 <body>
-<header class="mast">
-  <div class="wrap mast-row">
-    <div>
-      <h1 class="brand">jev-desk</h1>
-      <p class="tagline">{escape(TAGLINE)}</p>
-    </div>
+<header class="nav">
+  <div class="nav-inner">
+    <p class="wordmark">jev-desk</p>
     {mode}
   </div>
 </header>
 <main class="wrap">
-<div class="desk">
-  <section class="card intake">
-    <h2>Customer message</h2>
-    <form method="post" action="/">
-      <label for="message">Paste one message</label>
-      <textarea id="message" name="message" maxlength="8000" placeholder="I was charged twice this morning. Please send the money back today.">{escape(page.draft)}</textarea>
-      <div class="actions">
-        <p class="hint">One call. Three questions. No drafted reply.</p>
-        <button type="submit">Sort this message</button>
+  <section class="hero">
+    <p class="eyebrow">Support inbox</p>
+    <h1 class="tagline">{escape(TAGLINE)}</h1>
+    <p class="lede">Paste one message. Jev answers three questions. Your code picks the queue.</p>
+  </section>
+  <div class="desk">
+    <section class="card intake">
+      <h2>Message</h2>
+      <form method="post" action="/">
+        <label for="message">Paste one message</label>
+        <textarea id="message" name="message" maxlength="8000" placeholder="I was charged twice this morning. Please send the money back today.">{escape(page.draft)}</textarea>
+        <div class="actions">
+          <p class="hint">One call. Three questions. No drafted reply.</p>
+          <button type="submit">Sort this message</button>
+        </div>
+      </form>
+      <div class="samples">
+        <h3>Examples</h3>
+        {_sample_forms()}
       </div>
-    </form>
-    <div class="samples">
-      <h3>Built-in messages</h3>
-      {_sample_forms()}
-    </div>
-  </section>
-  <section class="card slip" aria-live="polite">
-    {_slip(page, notice)}
-  </section>
-</div>
-<footer>Jev is a hosted decision model. This app ships no weights. A live call needs an API key.</footer>
+    </section>
+    <section class="card slip" aria-live="polite">
+      {_slip(page, notice)}
+    </section>
+  </div>
+  <footer>Jev is a hosted decision model. This app ships no weights. A live call needs an API key.</footer>
 </main>
 </body>
 </html>
@@ -369,7 +467,7 @@ def _result(result: SortedMessage) -> str:
     <h2 class="queue-name" data-queue="{escape(result.queue.lower().replace(" ", "-"))}">{escape(result.queue)}</h2>
     <p class="queue-reason">{escape(result.reason)}</p>
   </div>
-  <p class="stamp">In code</p>
+  <p class="stamp">Decided in code</p>
 </div>
 <p class="kicker">Message</p>
 <blockquote class="message">{escape(result.message)}</blockquote>
