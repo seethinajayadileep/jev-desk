@@ -32,7 +32,19 @@ python -m jev_desk
 
 Open the page: [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
-The client is `TypeSafeClient(model="jev-latest")`. Each message is one `system_one` call. The model id on the response is logged and shown on the page.
+The process listens on `0.0.0.0` and `PORT` (8000 when unset), so that same page is what a platform proxy reaches. The client is `TypeSafeClient(model="jev-latest")`. Each message is one `system_one` call. The model id on the response is logged and shown on the page.
+
+## Deploy on Railway
+
+Railway builds this repo with Railpack. `requirements.txt` installs the SDK, `railway.toml` starts `python -m jev_desk`, and Railway checks `GET /health` before sending traffic.
+
+1. Create a Railway service from this repository.
+2. Add the variable `TYPESAFE_API_KEY`. Do not commit the key, and do not set `PORT`. Railway assigns `PORT`.
+3. Enable public networking and open the service URL.
+
+`/health` returns `{"status":"ok","mode":"live"}` or `"sample"`. It does not call Jev. The process binds `0.0.0.0:$PORT` and exits on `SIGTERM` so a new deploy can take the port. Live sorts are limited to 30 a minute per client (`JEV_DESK_SORTS_PER_MINUTE`, or `0` to turn the limit off). Railway's proxy address is read from `X-Forwarded-For`.
+
+Without the key, the public site stays in sample mode and still passes the health check.
 
 ## Without a key
 

@@ -1,0 +1,2 @@
+# Railpack installs this file. The app itself is the repository, started with python -m jev_desk.
+typesafe-sdk>=0.7
