@@ -15,6 +15,7 @@ class Page:
     draft: str
     result: SortedMessage | None
     notice: str | None
+    source: str | None = None
 
 
 def render_page(page: Page) -> str:
@@ -181,6 +182,36 @@ button:focus-visible {{
   outline-offset: 3px;
 }}
 .hint {{ margin: 0; color: var(--muted); font-size: 13px; }}
+.upload {{ margin-top: 22px; }}
+input[type="file"] {{
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.35 var(--sans);
+}}
+input[type="file"]::file-selector-button {{
+  margin-right: 14px;
+  border: 0;
+  border-radius: 980px;
+  background: #fff;
+  color: var(--ink);
+  font: 600 14px/1 var(--sans);
+  padding: 10px 16px;
+  cursor: pointer;
+}}
+input[type="file"]:focus {{
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}}
+.file-source {{
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}}
 .samples {{ margin-top: 28px; }}
 .samples h3 {{
   margin: 0 0 8px;
@@ -377,14 +408,19 @@ footer {{
   <section class="hero">
     <p class="eyebrow">Support inbox</p>
     <h1 class="tagline">{escape(TAGLINE)}</h1>
-    <p class="lede">Paste one message. Jev answers three questions. Your code picks the queue.</p>
+    <p class="lede">Paste one message, or upload a CSV, text file, or PDF. Jev answers three questions. Your code picks the queue.</p>
   </section>
   <div class="desk">
     <section class="card intake">
       <h2>Message</h2>
-      <form method="post" action="/">
+      <form method="post" action="/" enctype="multipart/form-data">
         <label for="message">Paste one message</label>
         <textarea id="message" name="message" maxlength="8000" placeholder="I was charged twice this morning. Please send the money back today.">{escape(page.draft)}</textarea>
+        <div class="upload">
+          <label for="upload">Or upload a file</label>
+          <input id="upload" name="upload" type="file" accept=".csv,.txt,.text,.pdf,text/csv,text/plain,application/pdf">
+          <p class="hint">CSV, text, or PDF. The text inside is one message.</p>
+        </div>
         <div class="actions">
           <p class="hint">One call. Three questions. No drafted reply.</p>
           <button type="submit">Sort this message</button>
@@ -427,11 +463,13 @@ def _sample_forms() -> str:
 
 
 def _slip(page: Page, notice: str) -> str:
+    source = f'<p class="file-source">From {escape(page.source)}</p>' if page.source else ""
     if page.result is not None:
-        return notice + _result(page.result)
+        return source + notice + _result(page.result)
     if page.notice:
         return (
-            notice
+            source
+            + notice
             + '<p class="hint">No team, urgency, or refund probability was invented for this message.</p>'
         )
     return _empty(page.live)
@@ -439,7 +477,7 @@ def _slip(page: Page, notice: str) -> str:
 
 def _empty(live: bool) -> str:
     if live:
-        lead = "Paste a message, or try a built-in one. Jev answers the three questions. This page routes it."
+        lead = "Paste a message or upload a CSV, text file, or PDF. Jev answers the three questions. This page routes it."
     else:
         lead = "Live Jev is off. Choose a built-in message to see the same screen with sample answers."
     return f"""

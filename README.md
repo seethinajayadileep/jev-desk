@@ -34,6 +34,8 @@ Open the page: [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
 The process listens on `0.0.0.0` and `PORT` (8000 when unset), so that same page is what a platform proxy reaches. The client is `TypeSafeClient(model="jev-latest")`. Each message is one `system_one` call. The model id on the response is logged and shown on the page.
 
+You can paste the message or upload a `.csv`, `.txt`, or `.pdf`. The text inside the file is the message, and it is still one call. A CSV is read as rows. A PDF has to contain selectable text. A scan or a password-protected PDF is not sorted. Files are not stored.
+
 ## Deploy on Railway
 
 Railway builds the default branch, `main`, with Railpack. `requirements.txt` installs the SDK, `main.py` and `railway.toml` start the app, and Railway checks `GET /health` before sending traffic. A deploy of a commit that does not contain this app has nothing to start.

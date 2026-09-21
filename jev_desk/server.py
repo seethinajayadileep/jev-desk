@@ -12,18 +12,19 @@ import signal
 import threading
 import time
 from typing import Any
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import urlparse
 
 from typesafe_sdk import TypeSafeClient, TypeSafeError
 
 from jev_desk.page import Page, render_page
 from jev_desk.samples import sample_for
 from jev_desk.triage import sort_message
+from jev_desk.uploads import Submission, UploadError, display_name, extract_text, parse_submission
 
 logger = logging.getLogger("jev_desk")
 
 MAX_CHARS = 8000
-MAX_BODY = 64 * 1024
+MAX_BODY = (2 * 1024 * 1024) + (64 * 1024)
 REQUEST_TIMEOUT = 30
 DEFAULT_SORTS_PER_MINUTE = 30
 
@@ -119,49 +120,65 @@ class Desk:
         mode = "live" if self.live else "sample"
         return json.dumps({"status": "ok", "mode": mode})
 
-    def page_for(self, message: str | None) -> str:
+    def page_for(self, message: str | None, *, source: str | None = None) -> str:
+        def show(draft: str, result: Any, notice: str | None) -> str:
+            return render_page(
+                Page(live=self.live, draft=draft, result=result, notice=notice, source=source)
+            )
+
         if message is None:
-            return render_page(Page(live=self.live, draft="", result=None, notice=None))
+            return show("", None, None)
         text = message.strip()
         if not text:
-            return render_page(
-                Page(live=self.live, draft="", result=None, notice="Paste a customer message.")
-            )
+            return show("", None, "Paste a customer message or upload a file.")
         if len(text) > MAX_CHARS:
-            return render_page(
-                Page(
-                    live=self.live,
-                    draft=text[:MAX_CHARS],
-                    result=None,
-                    notice="That message is too long to sort.",
-                )
-            )
+            return show(text[:MAX_CHARS], None, "That message is too long to sort.")
         if not self.live:
             sample = sample_for(text)
             if sample is None:
-                return render_page(
-                    Page(
-                        live=False,
-                        draft=text,
-                        result=None,
-                        notice="Live Jev is off, so this message was not sent. Choose a built-in sample.",
-                    )
+                return show(
+                    text,
+                    None,
+                    "Live Jev is off, so this message was not sent. Choose a built-in sample.",
                 )
             logger.info("sample mode; no system_one call")
-            return render_page(Page(live=False, draft=text, result=sample, notice=None))
+            return show(text, sample, None)
         try:
             result = sort_message(text, self.client())
         except TypeSafeError as exc:
             logger.warning("system_one failed: %s", exc.__class__.__name__)
-            return render_page(
-                Page(
-                    live=True,
-                    draft=text,
-                    result=None,
-                    notice=f"Jev did not answer. {public_error(exc)}",
+            return show(text, None, f"Jev did not answer. {public_error(exc)}")
+        return show(text, result, None)
+
+    def page_for_submission(self, submission: Submission) -> str:
+        message = submission.message
+        source = None
+        if submission.data is not None:
+            source = display_name(submission.filename or "upload")
+            if not submission.data:
+                return render_page(
+                    Page(
+                        live=self.live,
+                        draft=message.strip()[:MAX_CHARS],
+                        result=None,
+                        notice="That file is empty.",
+                        source=source,
+                    )
                 )
-            )
-        return render_page(Page(live=True, draft=text, result=result, notice=None))
+            try:
+                message = extract_text(submission.filename or "", submission.data)
+            except UploadError as exc:
+                return render_page(
+                    Page(
+                        live=self.live,
+                        draft=message.strip()[:MAX_CHARS],
+                        result=None,
+                        notice=str(exc),
+                        source=source,
+                    )
+                )
+            logger.info("upload name=%s bytes=%d", source, len(submission.data))
+        return self.page_for(message, source=source)
 
 
 def public_error(exc: BaseException) -> str:
@@ -241,22 +258,27 @@ def handler_for(desk: Desk) -> type[BaseHTTPRequestHandler]:
                 self._send(400, "Bad request", "text/plain; charset=utf-8")
                 return
             if length > MAX_BODY:
-                self._send(413, "Message is too large", "text/plain; charset=utf-8")
+                self._send(413, "That upload is too large.", "text/plain; charset=utf-8")
                 return
-            raw = self.rfile.read(length).decode("utf-8", errors="replace")
-            message = (parse_qs(raw, keep_blank_values=True).get("message") or [""])[0]
-            if message.strip() and not desk.limiter.allow(client_key(self.headers, self.client_address[0])):
+            raw = self.rfile.read(length)
+            try:
+                submission = parse_submission(self.headers.get("Content-Type", ""), raw)
+            except UploadError:
+                self._send(400, "That upload could not be read.", "text/plain; charset=utf-8")
+                return
+            has_work = bool(submission.message.strip()) or bool(submission.data)
+            if has_work and not desk.limiter.allow(client_key(self.headers, self.client_address[0])):
                 page = render_page(
                     Page(
                         live=desk.live,
-                        draft=message.strip()[:MAX_CHARS],
+                        draft=submission.message.strip()[:MAX_CHARS],
                         result=None,
                         notice="Too many messages. Wait a minute and try again.",
                     )
                 )
                 self._send(429, page, "text/html; charset=utf-8", {"Retry-After": "60"})
                 return
-            self._send(200, desk.page_for(message), "text/html; charset=utf-8")
+            self._send(200, desk.page_for_submission(submission), "text/html; charset=utf-8")
 
         def log_message(self, fmt: str, *args: Any) -> None:
             logging.getLogger("jev_desk.http").info("%s %s", self.address_string(), fmt % args)
