@@ -36,7 +36,7 @@ The process listens on `0.0.0.0` and `PORT` (8000 when unset), so that same page
 
 ## Deploy on Railway
 
-Railway builds this repo with Railpack. `requirements.txt` installs the SDK, `railway.toml` starts `python -m jev_desk`, and Railway checks `GET /health` before sending traffic.
+Railway builds the default branch, `main`, with Railpack. `requirements.txt` installs the SDK, `main.py` and `railway.toml` start the app, and Railway checks `GET /health` before sending traffic. A deploy of a commit that does not contain this app has nothing to start.
 
 1. Create a Railway service from this repository.
 2. Add the variable `TYPESAFE_API_KEY`. Do not commit the key, and do not set `PORT`. Railway assigns `PORT`.
