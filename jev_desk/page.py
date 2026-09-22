@@ -432,8 +432,9 @@ input[type="range"] {{
 }}
 .answers {{
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
+  margin-top: 12px;
 }}
 .answer {{
   margin: 0;
@@ -450,16 +451,122 @@ input[type="range"] {{
   text-transform: uppercase;
 }}
 .chosen {{
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 16px;
   margin: 4px 0 12px;
 }}
 .chosen strong {{
-  font-size: 28px;
+  display: block;
+  font-size: 32px;
   font-weight: 600;
   letter-spacing: -0.03em;
+  line-height: 1.1;
+}}
+.score-board {{
+  padding: 22px;
+  border-radius: 18px;
+  background: var(--bg);
+}}
+.score-head {{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}}
+.score-num {{
+  margin: 0;
+  font-size: clamp(52px, 6vw, 72px);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+}}
+.score-num span {{
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}}
+.confidence-pill {{
+  margin: 0 0 8px;
+  padding: 7px 12px;
+  border-radius: 980px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}}
+.confidence-pill.low {{
+  background: var(--ink);
+  color: #fff;
+}}
+.scale {{
+  position: relative;
+  height: 22px;
+  margin: 26px 10px 8px;
+}}
+.scale-track {{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 9px;
+  height: 4px;
+  border-radius: 999px;
+  background: #d2d2d7;
+}}
+.scale-dot {{
+  position: absolute;
+  top: 1px;
+  left: calc(var(--p) * 1%);
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 4px var(--bg);
+}}
+.scale-labels, .scale-ticks {{
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}}
+.scale-labels {{
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}}
+.scale-labels .here {{ color: var(--ink); }}
+.scale-ticks {{
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}}
+.reading {{
+  margin: 14px 0 0;
+  max-width: 40rem;
+  color: var(--ink);
+  font-size: 15px;
+}}
+ul.dist {{
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}}
+ul.dist li {{
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}}
+ul.dist li.picked {{ color: var(--ink); font-weight: 600; }}
+ul.dist .dist-top {{
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
 }}
 .meta {{
   margin: 0;
@@ -539,7 +646,7 @@ footer {{
   text-align: center;
 }}
 @media (max-width: 980px) {{
-  .studio, .call-grid, .answers, .rules {{ grid-template-columns: 1fr; }}
+  .studio, .call-grid, .answers, .rules, ul.dist {{ grid-template-columns: 1fr; }}
 }}
 @media (max-width: 860px) {{
   .nav-inner {{ height: auto; padding: 12px 20px; align-items: flex-start; flex-direction: column; gap: 4px; }}
@@ -553,6 +660,8 @@ footer {{
   .slip {{ order: 2; }}
   .card, .panel {{ border-radius: 22px; padding: 22px; }}
   .actions {{ flex-direction: column; align-items: stretch; }}
+  .score-head {{ align-items: flex-start; flex-direction: column; }}
+  .confidence-pill {{ margin-bottom: 0; }}
   button {{ width: 100%; }}
 }}
 @media (prefers-reduced-motion: reduce) {{
@@ -692,19 +801,18 @@ def _result(result: SortedMessage, preface: str = "") -> str:
   <p class="kicker">Message</p>
   <blockquote class="message">{escape(result.message)}</blockquote>
 </article>
+<article class="panel answers-panel">
+  {_urgency_board(result.urgency)}
+  <div class="answers">
+    {_graded("Team", result.team, score=None)}
+    {_refund(result.refund_noul)}
+  </div>
+  <p class="footnote">Model <span class="model-id">{model}</span>. {model_note} Python chose the queue. Jev did not write a reply.</p>
+</article>
 <div class="studio">
   <article class="panel">{_trace(result)}</article>
   <article class="panel">{_dials(result)}</article>
 </div>
-<article class="panel answers-panel">
-  <div class="answers">
-    {_graded("Team", result.team, score=None)}
-    {_graded("Urgency", result.urgency, score=result.urgency.score)}
-    {_refund(result.refund_noul)}
-  </div>
-  {_math(result.urgency)}
-  <p class="footnote">Model <span class="model-id">{model}</span>. {model_note} Python chose the queue. Jev did not write a reply.</p>
-</article>
 {_call()}
 """
 
@@ -730,6 +838,75 @@ def _trace(result: SortedMessage) -> str:
 <p class="kicker">Why this queue</p>
 <ol class="trace">{"".join(items)}</ol>
 """
+
+
+def _urgency_board(urgency: GradedAnswer) -> str:
+    score = urgency.score if urgency.score is not None else 0.0
+    marker = max(0.0, min(100.0, (score / 2.0) * 100.0))
+    low = urgency.confidence < 0.6
+    pill = " low" if low else ""
+    pill_text = (
+        f"Low confidence {fmt(urgency.confidence)}"
+        if low
+        else f"Confidence {fmt(urgency.confidence)}"
+    )
+    labels = []
+    for label in URGENCY_CRITERIA:
+        here = " here" if label == urgency.chosen_label else ""
+        labels.append(f'<span class="scale-label{here}">{escape(label)}</span>')
+    rows = "\n".join(
+        _dist_row(item.label, item.value, item.chosen) for item in urgency.probabilities
+    )
+    return f"""
+<section class="score-board">
+  <p class="kicker">Urgency score</p>
+  <div class="score-head">
+    <p class="score-num">{fmt(score)}<span>of 2</span></p>
+    <p class="confidence-pill{pill}">{escape(pill_text)}</p>
+  </div>
+  <div class="scale" style="--p:{marker:.1f}">
+    <span class="scale-track"></span>
+    <span class="scale-dot"></span>
+  </div>
+  <div class="scale-labels">{"".join(labels)}</div>
+  <div class="scale-ticks"><span>0</span><span>1</span><span>2</span></div>
+  <p class="reading">{escape(_urgency_reading(urgency))}</p>
+  {_math(urgency)}
+  <ul class="dist">{rows}</ul>
+</section>
+"""
+
+
+def _urgency_reading(urgency: GradedAnswer) -> str:
+    score = urgency.score if urgency.score is not None else 0.0
+    label = urgency.chosen_label
+    try:
+        index = URGENCY_CRITERIA.index(label)
+    except ValueError:
+        index = 0
+    if urgency.confidence < 0.6:
+        return (
+            f"Confidence is {fmt(urgency.confidence)}. {label} is only the tallest bar. "
+            f"The queue uses the score {fmt(score)}, not that word."
+        )
+    if abs(score - index) > 0.35:
+        return (
+            f"The tallest bar is {label}. The score {fmt(score)} sits between the marks, "
+            "and the queue uses that number."
+        )
+    return f"The tallest bar is {label}. The score {fmt(score)} sits with that bar, and the queue uses the number."
+
+
+def _dist_row(label: str, value: float, chosen: bool) -> str:
+    width = max(0.0, min(100.0, value * 100))
+    css = ' class="picked"' if chosen else ""
+    return (
+        f"<li{css}>"
+        f'<span class="dist-top"><span class="name">{escape(label)}</span>'
+        f'<span class="value">{fmt(value)}</span></span>'
+        f'<span class="track"><span class="fill" style="width:{width:.1f}%"></span></span>'
+        "</li>"
+    )
 
 
 def _math(urgency: GradedAnswer) -> str:
@@ -829,13 +1006,20 @@ def _graded(title: str, answer: GradedAnswer, score: float | None) -> str:
     if score is not None:
         bits.insert(0, f"score {fmt(score)}")
     rows = "\n".join(_prob_row(item.label, item.value, item.chosen) for item in answer.probabilities)
+    soft = answer.confidence < 0.6
+    note = (
+        '<p class="reading">This label is not firm. Confidence is below 0.60, so a person can still review it.</p>'
+        if soft
+        else ""
+    )
     return f"""
-<article class="answer">
+<article class="answer{" soft" if soft else ""}">
   <h3>{escape(title)}</h3>
   <div class="chosen">
     <strong>{escape(answer.chosen_label)}</strong>
     <p class="meta">{escape(" · ".join(bits))}</p>
   </div>
+  {note}
   <ul class="probs">{rows}</ul>
 </article>
 """
