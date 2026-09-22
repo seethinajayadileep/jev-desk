@@ -2,11 +2,32 @@
 
 One Jev call sorts the inbox. Your code decides who gets it.
 
-A support-inbox triage demo. Paste one customer message, or upload a CSV, text file, or PDF. The app sends that text to TypeSafe Jev once, with three typed questions in the same call: which team should handle it, how soon it needs a person, and whether the customer is asking for a refund. Jev returns a team, an urgency, and a refund probability. Ordinary Python then routes the message. The screen shows the message, the three answers with their probabilities, and the queue it landed in.
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/downloads/)
+[![typesafe-sdk](https://img.shields.io/pypi/v/typesafe-sdk?label=typesafe-sdk)](https://pypi.org/project/typesafe-sdk/)
+[![Jev](https://img.shields.io/badge/model-jev--latest-111111)](https://docs.typesafe.ai)
+[![tests](https://github.com/seethinajayadileep/jev-desk/actions/workflows/tests.yml/badge.svg)](https://github.com/seethinajayadileep/jev-desk/actions/workflows/tests.yml)
 
-Jev is a hosted decision model. This project does not ship model weights. A live call needs an API key. You can play the whole screen without one.
+Paste one customer message. Jev answers three short questions. Your Python code picks the queue.
 
-## Play with no API key
+You can try the whole screen with no API key. The four example buttons use saved answers, and the same rules still choose the queue.
+
+## What Jev is
+
+Jev is a hosted decision model from [TypeSafe](https://docs.typesafe.ai). You send it a piece of text and a list of typed questions. It sends back a label, a score, or a probability, each with the numbers behind that answer.
+
+This demo asks three questions in **one** call:
+
+| You ask | Jev's type | What you get back |
+| --- | --- | --- |
+| Which team should handle this message? | Choice | billing, technical, sales, or other, plus a probability for each and a confidence |
+| How soon does this need a person? | Score | Can wait (0), This week (1), or Today (2). The score is the weighted sum of those levels |
+| Is the customer asking for their money back? | Noul | One probability from 0 to 1. A noul has no confidence |
+
+Jev returns those three answers. It does not write the reply to the customer. The queue is chosen in `jev_desk/routing.py`.
+
+This project does not ship model weights. A live call needs an API key. Sample mode needs nothing.
+
+## Try it
 
 Python 3.10 or newer.
 
@@ -19,81 +40,73 @@ python -m jev_desk
 
 Open [http://127.0.0.1:8000](http://127.0.0.1:8000).
 
-The banner says **Live Jev is off**. Nothing is sent to Jev. The four example buttons still fill the same screen, and `jev_desk/routing.py` still picks the queue. The model line says **not called**.
+The banner says **Live Jev is off**. Nothing is sent to Jev. The model line says **not called**.
 
-Click the examples in this order. Each one hits a different rule.
+Click the four examples in this order. Each one lands in a different queue, for a different reason.
 
-| Example | Queue | Reason | What to notice |
-| --- | --- | --- | --- |
-| Charged twice, wants the money back today. | Billing | refund requested | Refund probability is 0.93. The rule is 0.70 or higher, so Billing wins before team or urgency is considered. |
-| Stripe integration failing for three days, losing sales, needs help ASAP. | On-call | technical and urgent | Refund is 0.08. Team is technical with confidence 0.86. Urgency score is 1.88, and On-call starts at 1.50. |
-| Asking what the annual plan costs. | Sales | sales team | Team is sales with confidence 0.93. Urgency is "Can wait" (score 0.46). The team label becomes the queue. |
-| A vague "it does not work" with no product or error. | Human review | low confidence | Team confidence is 0.44 and urgency confidence is 0.37. Either one under 0.60 sends it to a person. |
+| Click this | Queue | Why |
+| --- | --- | --- |
+| Charged twice, wants the money back today. | Billing | The refund probability is 0.93. Anything at least 0.70 goes to Billing first. |
+| Stripe integration failing for three days, losing sales, needs help ASAP. | On-call | Team is technical and the urgency score is 1.88. On-call starts at 1.50. |
+| Asking what the annual plan costs. | Sales | The team label is sales, and the confidence is high enough to trust it. |
+| A vague "it does not work" with no product or error. | Human review | Team confidence is 0.44 and urgency confidence is 0.37. Under 0.60, a person looks at it. |
 
-On each result, read the three answer blocks:
+Then look under the answers. That block is the playground:
 
-- **Team** is a Choice. You get the chosen label, a probability for billing, technical, sales, and other, and a confidence.
-- **Urgency** is a Score on an ordered scale: Can wait is 0, This week is 1, Today is 2. The score is the probability-weighted number. For the first example that is `0.05×0 + 0.18×1 + 0.77×2 = 1.72`. The chosen label is the level with the highest probability.
-- **Refund** is a Noul. One probability from 0 to 1. A noul has no confidence.
+- **Why this queue** shows the four checks with this message's numbers. The check that decided it is highlighted. The rest say they were not used.
+- **How the urgency score is made** shows the sum. For the first example that is `0.05×0 + 0.18×1 + 0.77×2 = 1.72`.
+- **The one call** shows the Choice, the Score, and the Noul that go out together.
+- **Play with the rules** has three sliders: refund cutoff (0.70), confidence floor (0.60), and urgent score (1.50). Let go of a slider. The same answers are routed again, and Jev is not called.
 
-Under the answers, the page is a playground:
+A good first move: on the "charged twice" example, slide the refund cutoff above 0.93. Billing stays the queue, but the reason changes from "refund requested" to "billing team". The probabilities do not change. Only your rule did.
 
-- **Why this queue** lists the four checks in order, with this message's numbers. The check that fired is marked. Later checks say they were not used.
-- **How the urgency score is made** shows the weighted sum, such as `0.05×0 + 0.18×1 + 0.77×2 = 1.72`.
-- **The one call** shows the Choice, the Score, and the Noul that `system_one` sends together.
-- **Play with the rules** has three sliders: refund cutoff, confidence floor, and urgent score. Release a slider, or press **Apply these rules**. The same answers are routed again. Jev is not called.
-
-Try it on the first example. Refund is 0.93, so Billing wins. Move the refund cutoff above 0.93 and release the slider. The refund check no longer fires, and the team label sends it to Billing for a different reason: billing team.
-
-The stamp **Decided in code** means the queue came from Python. The rules on the empty screen are the same ones in `route()`:
+The stamp **Decided in code** means Python picked the queue. The checks, in order:
 
 1. Refund probability 0.70 or higher goes to Billing.
 2. Team or urgency confidence below 0.60 goes to Human review.
 3. Technical and urgency 1.50 or higher goes to On-call.
 4. Otherwise the team label maps to Billing, Technical, Sales, or General.
 
-### Try a message that is not an example
+### A message that is not an example
 
-Paste any other sentence and press **Sort this message**. The page says the message was not sent, and it leaves the queue empty. Sample mode does not invent team, urgency, or refund numbers.
+Paste any other sentence and press **Sort this message**. The page says it was not sent, and the queue stays empty. Sample mode does not invent a team, an urgency, or a refund probability.
 
-### Try a file
+### A file
 
-Use **Or upload a file**, then sort. A `.txt` or `.pdf` is one message. A `.csv` with several rows is one message per row, and each row gets its own queue.
+Use **Or upload a file**, then sort.
 
-- A text file, or a one-line CSV, whose text is exactly one of the four examples gets that example's queue.
-- Put two examples on two lines of a CSV and both queues show up. A row that is not an example stays unsorted in sample mode.
-- A header row such as `message` or `team,note` labels the cells. A column named `message`, `body`, `text`, or `content` is the message. Quote a cell that contains a comma.
-- At most 20 rows are sorted. A PDF has to contain selectable text. A scan, a password-protected PDF, a file over 20 pages, or any other file type is not sorted.
+- A `.txt` or `.pdf` is one message. If the text is exactly one of the four examples, you get that example's queue.
+- A `.csv` with several rows sorts each row on its own, up to 20 rows. Put two examples on two lines and both queues show up.
+- A header such as `message` or `team,note` labels the cells. A column named `message`, `body`, `text`, or `content` is the message. Put quotes around a cell that contains a comma.
+- A PDF has to contain selectable text. A scan, a password-protected PDF, or a file over 20 pages is not sorted.
 
-Files are not stored. An upload can be up to 2 MB. The message itself can be up to 8,000 characters.
+Files are not stored. An upload can be up to 2 MB. A message can be up to 8,000 characters.
 
-## See the call in the code
+## Where this lives in the code
 
-When a key is set, one sort does this:
+With an API key, one sort does this:
 
 ```python
 client = TypeSafeClient(model="jev-latest")
 result = client.system_one(message, build_questions())
 ```
 
-`build_questions()` in `jev_desk/questions.py` returns the three questions together:
+| File | What it does |
+| --- | --- |
+| `jev_desk/questions.py` | The three questions: team, urgency, refund |
+| `jev_desk/triage.py` | Reads `result.choices["team"]`, `result.scores["urgency"]`, and `result.nouls["refund"]`, and logs `result.model` |
+| `jev_desk/routing.py` | Turns those answers into a queue |
+| `jev_desk/page.py` | The screen, including the playground |
+| `jev_desk/samples.py` | The four saved answers used when there is no key |
 
-| Key | Type | Question |
-| --- | --- | --- |
-| `team` | Choice | Which team should handle this message? |
-| `urgency` | Score | How soon does this need a person? |
-| `refund` | Noul | The customer is asking for a refund or their money back. |
-
-`jev_desk/triage.py` reads `result.choices["team"]`, `result.scores["urgency"]`, and `result.nouls["refund"]`. It logs `result.model`. The page shows that model id. `jev_desk/routing.py` turns those three answers into the queue.
-
-## Play with a live key
+## Use a live key
 
 ```bash
 export TYPESAFE_API_KEY=your_key_here
 python -m jev_desk
 ```
 
-Restart the process after setting the key. Any pasted message or uploaded file goes out once. The model id on the response is shown on the page and written to the log. Leave the key out of git.
+Restart after you set the key. Any pasted message or uploaded file goes out once. The model id from the response is shown on the page and written to the log. Keep the key out of git.
 
 The process listens on `0.0.0.0` and `PORT` (8000 when unset).
 
@@ -104,22 +117,41 @@ pip install -e ".[dev]"
 pytest
 ```
 
-The tests stay on this machine. They use fake SDK answers and do not call the network.
+The tests stay on this machine. They use fake answers and do not call the network.
 
-- `tests/test_routing.py` checks the thresholds: refund first, then low confidence, then on-call, then the team label.
-- `tests/test_triage.py` checks that one message makes one `system_one` call carrying all three questions.
+- `tests/test_routing.py` checks the thresholds, and that moving a cutoff changes the queue.
+- `tests/test_triage.py` checks that one message makes one `system_one` call with all three questions.
 - `tests/test_page.py` checks the screen, including a custom message that stays unsorted when live Jev is off.
-- `tests/test_uploads.py` checks CSV, text, and PDF extraction, and that a bad file type does not invent a queue.
+- `tests/test_playground.py` checks the trace, the score math, the sliders, and a two-row CSV.
+- `tests/test_uploads.py` checks CSV, text, and PDF reading.
 - `tests/test_server.py` checks `PORT`, `GET /health`, the rate limit, and shutdown on `SIGTERM`.
 
 `GET /health` returns `{"status":"ok","mode":"sample"}` or `"mode":"live"`. It does not call Jev.
 
-## Deploy on Railway
+## Put it on Railway
 
-Railway builds the default branch, `main`, with Railpack. `requirements.txt` installs the SDK and `pypdf`. `main.py` and `railway.toml` start the app. Railway checks `GET /health` before sending traffic.
+Railway builds `main` with Railpack. `requirements.txt` installs the SDK and `pypdf`. `main.py` and `railway.toml` start the app. Railway checks `GET /health` before sending traffic.
 
 1. Create a Railway service from this repository.
 2. Add the variable `TYPESAFE_API_KEY`. Do not set `PORT`. Railway assigns `PORT`.
-3. Enable public networking and open the service URL.
+3. Turn on public networking and open the service URL.
 
-Without the key, the public site stays in sample mode and the four examples still work. Live sorts are limited to 30 a minute per client (`JEV_DESK_SORTS_PER_MINUTE`, or `0` to turn the limit off). The client address is the first hop of `X-Forwarded-For`. The process exits on `SIGTERM` so a new deploy can take the port.
+With no key, the public site stays in sample mode and the four examples still work. Live sorts are limited to 30 a minute per client (`JEV_DESK_SORTS_PER_MINUTE`, or `0` to turn the limit off).
+
+## Share it
+
+The easiest way to show Jev is to let someone click the examples. Lead with the tagline, then the link.
+
+**GitHub About.** On the repository page, use the tagline as the description:
+
+> One Jev call sorts the inbox. Your code decides who gets it.
+
+Topics that help people find it: `python`, `jev`, `typesafe`, `support`, `demo`.
+
+**A post you can copy.** Change the link if you have a live Railway URL.
+
+> One Jev call sorts a support message. Jev answers three typed questions (team, urgency, refund). Ordinary Python picks the queue. No reply is drafted. Try the four examples with no API key: https://github.com/seethinajayadileep/jev-desk
+
+**What to show.** A short screen recording of two things is enough: the "charged twice" example landing in Billing, then the refund slider moving so the reason changes while the probabilities stay put. That is the whole idea. The queue is your code.
+
+**What to leave out.** Do not paste `TYPESAFE_API_KEY` into a post, a screenshot, or a commit. If you deploy the site, share the public URL and say that sample mode works before anyone adds a key.
