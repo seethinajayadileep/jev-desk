@@ -41,7 +41,7 @@ def render_page(page: Page) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>jev-desk</title>
+<title>jev-inbox</title>
 <style>
 :root {{
   --bg: #f5f5f7;
@@ -673,7 +673,7 @@ footer {{
 <body>
 <header class="nav">
   <div class="nav-inner">
-    <p class="wordmark">jev-desk</p>
+    <p class="wordmark">jev-inbox</p>
     {mode}
   </div>
 </header>
@@ -725,7 +725,7 @@ document.querySelectorAll(".dials input[type=range]").forEach(function (input) {
 
 
 def _sample_banner() -> str:
-    return '<p class="mode sample">Live Jev is off. Built-in samples still use the desk rules. No live call is made.</p>'
+    return '<p class="mode sample">Live Jev is off. Built-in samples still use the inbox rules. No live call is made.</p>'
 
 
 def _sample_forms() -> str:
