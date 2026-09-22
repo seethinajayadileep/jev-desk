@@ -108,7 +108,7 @@ body {{
   margin: 0 auto;
   padding: 0 28px 72px;
 }}
-.hero {{ padding: 72px 0 36px; }}
+.hero {{ padding: 56px 0 28px; }}
 .eyebrow {{
   margin: 0 0 12px;
   color: var(--muted);
@@ -117,10 +117,10 @@ body {{
 }}
 .tagline {{
   margin: 0;
-  max-width: 16ch;
-  font-size: clamp(40px, 6vw, 72px);
+  max-width: 12em;
+  font-size: clamp(40px, 5vw, 64px);
   font-weight: 600;
-  line-height: 1.04;
+  line-height: 1.05;
   letter-spacing: -0.035em;
 }}
 .lede {{
@@ -133,15 +133,19 @@ body {{
 }}
 .desk {{
   display: grid;
-  grid-template-columns: minmax(300px, 0.92fr) minmax(340px, 1.08fr);
+  grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
   gap: 20px;
   align-items: start;
 }}
-.card {{
+.card, .panel {{
   background: var(--surface);
   border-radius: 28px;
   padding: 28px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+}}
+.intake {{
+  position: sticky;
+  top: 72px;
 }}
 h2 {{
   margin: 0 0 16px;
@@ -197,7 +201,12 @@ button:focus-visible {{
   outline-offset: 3px;
 }}
 .hint {{ margin: 0; color: var(--muted); font-size: 13px; }}
-.upload {{ margin-top: 22px; }}
+.upload {{
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--bg);
+}}
 input[type="file"] {{
   width: 100%;
   padding: 10px 12px;
@@ -227,20 +236,47 @@ input[type="file"]:focus {{
   font-size: 13px;
   font-weight: 600;
 }}
+.slip {{
+  display: grid;
+  gap: 16px;
+  min-height: 100%;
+}}
+.queue-top {{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}}
+.queue-top .kicker {{ margin: 0; }}
+.verdict .queue {{ margin-bottom: 22px; }}
 .trace {{
   list-style: none;
-  margin: 0 0 28px;
+  margin: 12px 0 0;
   padding: 0;
   display: grid;
   gap: 8px;
+  counter-reset: step;
 }}
 .trace li {{
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 10px;
   padding: 12px 14px;
-  border-radius: 14px;
+  border-radius: 16px;
   background: var(--bg);
   color: var(--muted);
   font-size: 14px;
 }}
+.trace li::before {{
+  counter-increment: step;
+  content: counter(step, decimal-leading-zero);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}}
+.trace li > span {{ min-width: 0; }}
 .trace li strong {{
   display: block;
   margin-bottom: 2px;
@@ -251,32 +287,39 @@ input[type="file"]:focus {{
   background: var(--ink);
   color: #f5f5f7;
 }}
+.trace li.fired::before,
 .trace li.fired strong {{ color: #fff; }}
-.trace li.skipped {{ opacity: 0.72; }}
-.math, .call {{
-  margin: 0 0 28px;
-  padding-top: 18px;
+.trace li.skipped {{ opacity: 0.62; }}
+.math {{
+  margin: 14px 0 0;
+  padding-top: 12px;
   border-top: 1px solid var(--line);
 }}
-.math p, .call p {{ margin: 8px 0 0; }}
+.math p {{ margin: 6px 0 0; }}
 .formula {{
   margin: 8px 0 0;
+  font-size: 15px;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  color: var(--ink);
 }}
+.call {{ margin: 0; }}
+.call > p {{ margin: 8px 0 0; color: var(--muted); }}
 .call-grid {{
   display: grid;
-  gap: 14px;
-  margin-top: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
 }}
 .call-grid article {{
-  padding: 14px 16px;
-  border-radius: 16px;
+  padding: 16px;
+  border-radius: 18px;
   background: var(--bg);
 }}
 .call-grid h3 {{
   margin: 0;
   font-size: 15px;
+  letter-spacing: -0.02em;
 }}
 .call-grid p, .call-grid li {{
   color: var(--muted);
@@ -286,32 +329,34 @@ input[type="file"]:focus {{
   margin: 8px 0 0;
   padding-left: 18px;
 }}
-.dials {{
-  margin-top: 8px;
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
+.studio {{
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+  gap: 16px;
+  align-items: start;
 }}
-.dials label {{
-  margin-top: 14px;
-}}
+.dials {{ margin: 0; }}
+.dials label {{ margin-top: 16px; }}
 .dial-head {{
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
   gap: 12px;
 }}
 .dials output {{
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
 }}
 input[type="range"] {{
   width: 100%;
-  margin-top: 8px;
+  margin: 8px 0 0;
   accent-color: var(--blue);
 }}
-.row + .row {{
-  margin-top: 28px;
-  padding-top: 28px;
-  border-top: 1px solid var(--line);
-}}
+.batch-head {{ margin-bottom: 4px; }}
+.row {{ display: grid; gap: 16px; }}
 .samples {{ margin-top: 28px; }}
 .samples h3 {{
   margin: 0 0 8px;
@@ -341,8 +386,7 @@ input[type="range"] {{
   color: var(--ink);
   font-size: 15px;
 }}
-.slip {{ min-height: 100%; }}
-.queue {{ margin-bottom: 22px; }}
+.queue {{ margin: 0; }}
 .kicker {{
   margin: 0 0 6px;
   color: var(--muted);
@@ -365,25 +409,38 @@ input[type="range"] {{
   letter-spacing: -0.016em;
 }}
 .stamp {{
-  margin: 14px 0 0;
+  margin: 0;
+  padding: 7px 12px;
+  border-radius: 980px;
+  background: var(--bg);
   color: var(--muted);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
 }}
 .message {{
-  margin: 0 0 28px;
-  padding: 0;
+  margin: 8px 0 0;
+  padding: 16px 18px;
   border: 0;
+  border-radius: 18px;
+  background: var(--bg);
   color: var(--ink);
-  font-size: 19px;
+  font-size: 18px;
   line-height: 1.4;
   letter-spacing: -0.016em;
   white-space: pre-wrap;
 }}
-.answers {{ display: grid; gap: 22px; }}
+.answers {{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}}
 .answer {{
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
+  margin: 0;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--bg);
 }}
 .answer h3 {{
   margin: 0;
@@ -394,16 +451,122 @@ input[type="range"] {{
   text-transform: uppercase;
 }}
 .chosen {{
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 16px;
   margin: 4px 0 12px;
 }}
 .chosen strong {{
-  font-size: 28px;
+  display: block;
+  font-size: 32px;
   font-weight: 600;
   letter-spacing: -0.03em;
+  line-height: 1.1;
+}}
+.score-board {{
+  padding: 22px;
+  border-radius: 18px;
+  background: var(--bg);
+}}
+.score-head {{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}}
+.score-num {{
+  margin: 0;
+  font-size: clamp(52px, 6vw, 72px);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+}}
+.score-num span {{
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}}
+.confidence-pill {{
+  margin: 0 0 8px;
+  padding: 7px 12px;
+  border-radius: 980px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}}
+.confidence-pill.low {{
+  background: var(--ink);
+  color: #fff;
+}}
+.scale {{
+  position: relative;
+  height: 22px;
+  margin: 26px 10px 8px;
+}}
+.scale-track {{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 9px;
+  height: 4px;
+  border-radius: 999px;
+  background: #d2d2d7;
+}}
+.scale-dot {{
+  position: absolute;
+  top: 1px;
+  left: calc(var(--p) * 1%);
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 4px var(--bg);
+}}
+.scale-labels, .scale-ticks {{
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}}
+.scale-labels {{
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}}
+.scale-labels .here {{ color: var(--ink); }}
+.scale-ticks {{
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}}
+.reading {{
+  margin: 14px 0 0;
+  max-width: 40rem;
+  color: var(--ink);
+  font-size: 15px;
+}}
+ul.dist {{
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}}
+ul.dist li {{
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}}
+ul.dist li.picked {{ color: var(--ink); font-weight: 600; }}
+ul.dist .dist-top {{
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
 }}
 .meta {{
   margin: 0;
@@ -420,11 +583,11 @@ ul.probs {{
 }}
 ul.probs li {{
   display: grid;
-  grid-template-columns: 92px 1fr 44px;
-  gap: 10px;
+  grid-template-columns: minmax(4.5rem, auto) minmax(0, 1fr) 2.6rem;
+  gap: 8px;
   align-items: center;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 13px;
 }}
 ul.probs li.picked {{ color: var(--ink); font-weight: 600; }}
 .track {{
@@ -464,12 +627,16 @@ li.picked .fill {{ background: var(--ink); }}
   padding: 0;
   list-style: none;
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
   color: var(--ink);
   font-size: 15px;
 }}
 .rules li {{
-  padding-left: 16px;
+  margin: 0;
+  padding: 14px 14px 14px 16px;
+  border-radius: 16px;
+  background: var(--bg);
   border-left: 2px solid #d2d2d7;
 }}
 footer {{
@@ -478,18 +645,24 @@ footer {{
   font-size: 12px;
   text-align: center;
 }}
+@media (max-width: 980px) {{
+  .studio, .call-grid, .answers, .rules, ul.dist {{ grid-template-columns: 1fr; }}
+}}
 @media (max-width: 860px) {{
   .nav-inner {{ height: auto; padding: 12px 20px; align-items: flex-start; flex-direction: column; gap: 4px; }}
   .mode {{ text-align: left; max-width: none; }}
   .wrap {{ padding: 0 20px 56px; }}
-  .hero {{ padding: 40px 0 24px; }}
+  .hero {{ padding: 36px 0 20px; }}
   .tagline {{ max-width: 12ch; }}
   .lede {{ font-size: 19px; }}
   .desk {{ grid-template-columns: 1fr; }}
-  .card {{ border-radius: 22px; padding: 22px; }}
+  .intake {{ position: static; order: 1; }}
+  .slip {{ order: 2; }}
+  .card, .panel {{ border-radius: 22px; padding: 22px; }}
   .actions {{ flex-direction: column; align-items: stretch; }}
+  .score-head {{ align-items: flex-start; flex-direction: column; }}
+  .confidence-pill {{ margin-bottom: 0; }}
   button {{ width: 100%; }}
-  ul.probs li {{ grid-template-columns: 78px 1fr 40px; }}
 }}
 @media (prefers-reduced-motion: reduce) {{
   html {{ scroll-behavior: auto; }}
@@ -531,7 +704,7 @@ footer {{
         {_sample_forms()}
       </div>
     </section>
-    <section class="card slip" aria-live="polite">
+    <section class="slip" aria-live="polite">
       {_slip(page, notice)}
     </section>
   </div>
@@ -574,17 +747,19 @@ def _slip(page: Page, notice: str) -> str:
         count = len(page.rows)
         label = "1 message" if count == 1 else f"{count} messages"
         intro = (
-            f'<p class="kicker">{label}</p>'
-            '<p class="hint">Each row is one message. Moving a cutoff routes that row again, with no new Jev call.</p>'
+            f'<div class="panel batch-head">{source}<p class="kicker">{label}</p>'
+            '<p class="hint">Each row is one message. Moving a cutoff routes that row again, with no new Jev call.</p></div>'
         )
-        return source + intro + body
+        return intro + body
     if page.result is not None:
-        return source + notice + _result(page.result)
+        return _result(page.result, preface=source + notice)
     if page.notice:
         return (
-            source
+            '<div class="panel">'
+            + source
             + notice
             + '<p class="hint">No team, urgency, or refund probability was invented for this message.</p>'
+            + "</div>"
         )
     return _empty(page.live)
 
@@ -595,7 +770,7 @@ def _empty(live: bool) -> str:
     else:
         lead = "Live Jev is off. Choose a built-in message, then move the cutoffs under the queue."
     return f"""
-<div class="empty">
+<div class="panel empty">
   <p class="kicker">Queue</p>
   <h2>Nothing sorted yet</h2>
   <p>{lead}</p>
@@ -609,30 +784,36 @@ def _empty(live: bool) -> str:
 """
 
 
-def _result(result: SortedMessage) -> str:
+def _result(result: SortedMessage, preface: str = "") -> str:
     model = escape(result.model) if result.model else "not called"
     model_note = "Returned on the response." if result.live else "Sample mode. Jev was not called."
     return f"""
-<div class="queue">
-  <div>
-    <p class="kicker">Queue</p>
+<article class="panel verdict">
+  {preface}
+  <div class="queue">
+    <div class="queue-top">
+      <p class="kicker">Queue</p>
+      <p class="stamp">Decided in code</p>
+    </div>
     <h2 class="queue-name" data-queue="{escape(result.queue.lower().replace(" ", "-"))}">{escape(result.queue)}</h2>
     <p class="queue-reason">{escape(result.reason)}</p>
   </div>
-  <p class="stamp">Decided in code</p>
+  <p class="kicker">Message</p>
+  <blockquote class="message">{escape(result.message)}</blockquote>
+</article>
+<article class="panel answers-panel">
+  {_urgency_board(result.urgency)}
+  <div class="answers">
+    {_graded("Team", result.team, score=None)}
+    {_refund(result.refund_noul)}
+  </div>
+  <p class="footnote">Model <span class="model-id">{model}</span>. {model_note} Python chose the queue. Jev did not write a reply.</p>
+</article>
+<div class="studio">
+  <article class="panel">{_trace(result)}</article>
+  <article class="panel">{_dials(result)}</article>
 </div>
-<p class="kicker">Message</p>
-<blockquote class="message">{escape(result.message)}</blockquote>
-<div class="answers">
-  {_graded("Team", result.team, score=None)}
-  {_graded("Urgency", result.urgency, score=result.urgency.score)}
-  {_refund(result.refund_noul)}
-</div>
-<p class="footnote">Model <span class="model-id">{model}</span>. {model_note} Python chose the queue. Jev did not write a reply.</p>
-{_trace(result)}
-{_math(result.urgency)}
 {_call()}
-{_dials(result)}
 """
 
 
@@ -640,23 +821,92 @@ def _row(item: DeskRow) -> str:
     if item.result is None:
         note = f'<p class="notice">{escape(item.notice or "")}</p>'
         return (
-            f'<article class="row">{note}'
+            f'<article class="panel row">{note}'
             '<p class="hint">No team, urgency, or refund probability was invented for this message.</p>'
             "</article>"
         )
-    return f'<article class="row">{_result(item.result)}</article>'
+    return f'<div class="row">{_result(item.result)}</div>'
 
 
 def _trace(result: SortedMessage) -> str:
     items = []
     for step in result.steps:
         items.append(
-            f'<li class="{escape(step.state)}"><strong>{escape(step.name)}</strong>{escape(step.detail)}</li>'
+            f'<li class="{escape(step.state)}"><span><strong>{escape(step.name)}</strong>{escape(step.detail)}</span></li>'
         )
     return f"""
 <p class="kicker">Why this queue</p>
 <ol class="trace">{"".join(items)}</ol>
 """
+
+
+def _urgency_board(urgency: GradedAnswer) -> str:
+    score = urgency.score if urgency.score is not None else 0.0
+    marker = max(0.0, min(100.0, (score / 2.0) * 100.0))
+    low = urgency.confidence < 0.6
+    pill = " low" if low else ""
+    pill_text = (
+        f"Low confidence {fmt(urgency.confidence)}"
+        if low
+        else f"Confidence {fmt(urgency.confidence)}"
+    )
+    labels = []
+    for label in URGENCY_CRITERIA:
+        here = " here" if label == urgency.chosen_label else ""
+        labels.append(f'<span class="scale-label{here}">{escape(label)}</span>')
+    rows = "\n".join(
+        _dist_row(item.label, item.value, item.chosen) for item in urgency.probabilities
+    )
+    return f"""
+<section class="score-board">
+  <p class="kicker">Urgency score</p>
+  <div class="score-head">
+    <p class="score-num">{fmt(score)}<span>of 2</span></p>
+    <p class="confidence-pill{pill}">{escape(pill_text)}</p>
+  </div>
+  <div class="scale" style="--p:{marker:.1f}">
+    <span class="scale-track"></span>
+    <span class="scale-dot"></span>
+  </div>
+  <div class="scale-labels">{"".join(labels)}</div>
+  <div class="scale-ticks"><span>0</span><span>1</span><span>2</span></div>
+  <p class="reading">{escape(_urgency_reading(urgency))}</p>
+  {_math(urgency)}
+  <ul class="dist">{rows}</ul>
+</section>
+"""
+
+
+def _urgency_reading(urgency: GradedAnswer) -> str:
+    score = urgency.score if urgency.score is not None else 0.0
+    label = urgency.chosen_label
+    try:
+        index = URGENCY_CRITERIA.index(label)
+    except ValueError:
+        index = 0
+    if urgency.confidence < 0.6:
+        return (
+            f"Confidence is {fmt(urgency.confidence)}. {label} is only the tallest bar. "
+            f"The queue uses the score {fmt(score)}, not that word."
+        )
+    if abs(score - index) > 0.35:
+        return (
+            f"The tallest bar is {label}. The score {fmt(score)} sits between the marks, "
+            "and the queue uses that number."
+        )
+    return f"The tallest bar is {label}. The score {fmt(score)} sits with that bar, and the queue uses the number."
+
+
+def _dist_row(label: str, value: float, chosen: bool) -> str:
+    width = max(0.0, min(100.0, value * 100))
+    css = ' class="picked"' if chosen else ""
+    return (
+        f"<li{css}>"
+        f'<span class="dist-top"><span class="name">{escape(label)}</span>'
+        f'<span class="value">{fmt(value)}</span></span>'
+        f'<span class="track"><span class="fill" style="width:{width:.1f}%"></span></span>'
+        "</li>"
+    )
 
 
 def _math(urgency: GradedAnswer) -> str:
@@ -681,7 +931,7 @@ def _call() -> str:
         f"<li>{index} {escape(label)}</li>" for index, label in enumerate(URGENCY_CRITERIA)
     )
     return f"""
-<section class="call">
+<section class="panel call">
   <p class="kicker">The one call</p>
   <p>system_one sends these three questions together. The page reads choices, scores, and nouls.</p>
   <div class="call-grid">
@@ -731,7 +981,7 @@ def _dials(result: SortedMessage) -> str:
   {_dial("Confidence floor", "confidence_floor", limits.confidence_floor, "1")}
   {_dial("Urgent score", "urgent_score", limits.urgent_score, "2")}
   <div class="actions">
-    <p class="hint">Release the slider, or press the button.</p>
+    <p class="hint">Release a slider to route again.</p>
     <button type="submit">Apply these rules</button>
   </div>
 </form>
@@ -756,13 +1006,20 @@ def _graded(title: str, answer: GradedAnswer, score: float | None) -> str:
     if score is not None:
         bits.insert(0, f"score {fmt(score)}")
     rows = "\n".join(_prob_row(item.label, item.value, item.chosen) for item in answer.probabilities)
+    soft = answer.confidence < 0.6
+    note = (
+        '<p class="reading">This label is not firm. Confidence is below 0.60, so a person can still review it.</p>'
+        if soft
+        else ""
+    )
     return f"""
-<article class="answer">
+<article class="answer{" soft" if soft else ""}">
   <h3>{escape(title)}</h3>
   <div class="chosen">
     <strong>{escape(answer.chosen_label)}</strong>
     <p class="meta">{escape(" · ".join(bits))}</p>
   </div>
+  {note}
   <ul class="probs">{rows}</ul>
 </article>
 """
