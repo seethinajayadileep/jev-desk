@@ -83,7 +83,7 @@ export TYPESAFE_API_KEY=your_key_here
 python -m jev_desk
 ```
 
-Restart the process after setting the key. The banner says **Live Jev is on**. Any pasted message or uploaded file goes out once. The model id on the response is shown on the page and written to the log. Leave the key out of git.
+Restart the process after setting the key. Any pasted message or uploaded file goes out once. The model id on the response is shown on the page and written to the log. Leave the key out of git.
 
 The process listens on `0.0.0.0` and `PORT` (8000 when unset).
 

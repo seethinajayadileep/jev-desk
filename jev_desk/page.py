@@ -19,7 +19,7 @@ class Page:
 
 
 def render_page(page: Page) -> str:
-    mode = _live_banner() if page.live else _sample_banner()
+    mode = "" if page.live else _sample_banner()
     notice = f'<p class="notice">{escape(page.notice)}</p>' if page.notice else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -440,10 +440,6 @@ footer {{
 </body>
 </html>
 """
-
-
-def _live_banner() -> str:
-    return '<p class="mode live">Live Jev is on. This message goes out once, with team, urgency, and refund in the same call.</p>'
 
 
 def _sample_banner() -> str:

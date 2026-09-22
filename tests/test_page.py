@@ -79,7 +79,8 @@ def test_live_page_shows_the_model_id_from_the_response(monkeypatch):
     desk = Desk(live=True, client=client)
     html = desk.page_for("What does the annual plan cost?")
     assert len(client.calls) == 1
-    assert "Live Jev is on" in html
+    assert "Live Jev is on" not in html
+    assert "This message goes out once" not in html
     assert "Live Jev is off" not in html
     assert "Sales" in html
     assert "sales team" in html
