@@ -150,9 +150,9 @@ Topics that help people find it: `python`, `jev`, `typesafe`, `support`, `demo`.
 
 **A post you can copy.**
 
-> One Jev call sorts a support message. Jev answers three typed questions (team, urgency, refund). Ordinary Python picks the queue. No reply is drafted. Try it: https://jev-desk.seethinajayadileep.dev
+> One Jev call sorts a support message. Jev answers three typed questions (team, urgency, refund). Ordinary Python picks the queue. No reply is drafted. Try it: https://jev-inbox.seethinajayadileep.dev
 
-The source is https://github.com/seethinajayadileep/jev-desk. The live site follows `main`. It is in live mode when `TYPESAFE_API_KEY` is set on Railway.
+The source is https://github.com/seethinajayadileep/jev-inbox. The live site follows `main`. It is in live mode when `TYPESAFE_API_KEY` is set on Railway.
 
 **What to show.** A short screen recording of two things is enough: the "charged twice" example landing in Billing, then the refund slider moving so the reason changes while the probabilities stay put. That is the whole idea. The queue is your code.
 
