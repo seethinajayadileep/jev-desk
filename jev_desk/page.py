@@ -3,10 +3,24 @@
 from dataclasses import dataclass
 from html import escape
 
+from jev_desk.questions import (
+    REFUND_INSTRUCTIONS,
+    TEAM_CRITERIA,
+    TEAM_INSTRUCTIONS,
+    URGENCY_CRITERIA,
+    URGENCY_INSTRUCTIONS,
+)
+from jev_desk.routing import Thresholds
 from jev_desk.samples import SAMPLES
 from jev_desk.triage import GradedAnswer, SortedMessage
 
 TAGLINE = "One Jev call sorts the inbox. Your code decides who gets it."
+
+
+@dataclass(frozen=True)
+class DeskRow:
+    result: SortedMessage | None
+    notice: str | None = None
 
 
 @dataclass(frozen=True)
@@ -16,6 +30,7 @@ class Page:
     result: SortedMessage | None
     notice: str | None
     source: str | None = None
+    rows: tuple[DeskRow, ...] = ()
 
 
 def render_page(page: Page) -> str:
@@ -211,6 +226,91 @@ input[type="file"]:focus {{
   color: var(--muted);
   font-size: 13px;
   font-weight: 600;
+}}
+.trace {{
+  list-style: none;
+  margin: 0 0 28px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}}
+.trace li {{
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 14px;
+}}
+.trace li strong {{
+  display: block;
+  margin-bottom: 2px;
+  color: var(--ink);
+  font-size: 13px;
+}}
+.trace li.fired {{
+  background: var(--ink);
+  color: #f5f5f7;
+}}
+.trace li.fired strong {{ color: #fff; }}
+.trace li.skipped {{ opacity: 0.72; }}
+.math, .call {{
+  margin: 0 0 28px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}}
+.math p, .call p {{ margin: 8px 0 0; }}
+.formula {{
+  margin: 8px 0 0;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}}
+.call-grid {{
+  display: grid;
+  gap: 14px;
+  margin-top: 12px;
+}}
+.call-grid article {{
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--bg);
+}}
+.call-grid h3 {{
+  margin: 0;
+  font-size: 15px;
+}}
+.call-grid p, .call-grid li {{
+  color: var(--muted);
+  font-size: 14px;
+}}
+.call-grid ul {{
+  margin: 8px 0 0;
+  padding-left: 18px;
+}}
+.dials {{
+  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}}
+.dials label {{
+  margin-top: 14px;
+}}
+.dial-head {{
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}}
+.dials output {{
+  font-variant-numeric: tabular-nums;
+}}
+input[type="range"] {{
+  width: 100%;
+  margin-top: 8px;
+  accent-color: var(--blue);
+}}
+.row + .row {{
+  margin-top: 28px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
 }}
 .samples {{ margin-top: 28px; }}
 .samples h3 {{
@@ -408,7 +508,7 @@ footer {{
   <section class="hero">
     <p class="eyebrow">Support inbox</p>
     <h1 class="tagline">{escape(TAGLINE)}</h1>
-    <p class="lede">Paste one message, or upload a CSV, text file, or PDF. Jev answers three questions. Your code picks the queue.</p>
+    <p class="lede">Paste one message, or upload a file. Then move the cutoffs and watch the queue change.</p>
   </section>
   <div class="desk">
     <section class="card intake">
@@ -437,6 +537,15 @@ footer {{
   </div>
   <footer>Jev is a hosted decision model. This app ships no weights. A live call needs an API key.</footer>
 </main>
+<script>
+document.querySelectorAll(".dials input[type=range]").forEach(function (input) {{
+  var output = input.parentElement.querySelector("output");
+  function show() {{ output.textContent = Number(input.value).toFixed(2); }}
+  input.addEventListener("input", show);
+  input.addEventListener("change", function () {{ input.form.requestSubmit(); }});
+  show();
+}});
+</script>
 </body>
 </html>
 """
@@ -460,6 +569,15 @@ def _sample_forms() -> str:
 
 def _slip(page: Page, notice: str) -> str:
     source = f'<p class="file-source">From {escape(page.source)}</p>' if page.source else ""
+    if page.rows:
+        body = "".join(_row(item) for item in page.rows)
+        count = len(page.rows)
+        label = "1 message" if count == 1 else f"{count} messages"
+        intro = (
+            f'<p class="kicker">{label}</p>'
+            '<p class="hint">Each row is one message. Moving a cutoff routes that row again, with no new Jev call.</p>'
+        )
+        return source + intro + body
     if page.result is not None:
         return source + notice + _result(page.result)
     if page.notice:
@@ -475,7 +593,7 @@ def _empty(live: bool) -> str:
     if live:
         lead = "Paste a message or upload a CSV, text file, or PDF. Jev answers the three questions. This page routes it."
     else:
-        lead = "Live Jev is off. Choose a built-in message to see the same screen with sample answers."
+        lead = "Live Jev is off. Choose a built-in message, then move the cutoffs under the queue."
     return f"""
 <div class="empty">
   <p class="kicker">Queue</p>
@@ -511,7 +629,126 @@ def _result(result: SortedMessage) -> str:
   {_refund(result.refund_noul)}
 </div>
 <p class="footnote">Model <span class="model-id">{model}</span>. {model_note} Python chose the queue. Jev did not write a reply.</p>
+{_trace(result)}
+{_math(result.urgency)}
+{_call()}
+{_dials(result)}
 """
+
+
+def _row(item: DeskRow) -> str:
+    if item.result is None:
+        note = f'<p class="notice">{escape(item.notice or "")}</p>'
+        return (
+            f'<article class="row">{note}'
+            '<p class="hint">No team, urgency, or refund probability was invented for this message.</p>'
+            "</article>"
+        )
+    return f'<article class="row">{_result(item.result)}</article>'
+
+
+def _trace(result: SortedMessage) -> str:
+    items = []
+    for step in result.steps:
+        items.append(
+            f'<li class="{escape(step.state)}"><strong>{escape(step.name)}</strong>{escape(step.detail)}</li>'
+        )
+    return f"""
+<p class="kicker">Why this queue</p>
+<ol class="trace">{"".join(items)}</ol>
+"""
+
+
+def _math(urgency: GradedAnswer) -> str:
+    parts = [f"{item.value:.2f}×{index}" for index, item in enumerate(urgency.probabilities)]
+    weighted = sum(item.value * index for index, item in enumerate(urgency.probabilities))
+    score = urgency.score if urgency.score is not None else weighted
+    return f"""
+<section class="math">
+  <p class="kicker">How the urgency score is made</p>
+  <p>Can wait is 0, This week is 1, Today is 2. The score is the probability-weighted sum.</p>
+  <p class="formula">{escape(" + ".join(parts))} = {weighted:.2f}</p>
+  <p class="meta">Jev returned {fmt(score)}.</p>
+</section>
+"""
+
+
+def _call() -> str:
+    team_rows = "".join(
+        f"<li>{escape(label)} — {escape(meaning)}</li>" for label, meaning in TEAM_CRITERIA.items()
+    )
+    urgency_rows = "".join(
+        f"<li>{index} {escape(label)}</li>" for index, label in enumerate(URGENCY_CRITERIA)
+    )
+    return f"""
+<section class="call">
+  <p class="kicker">The one call</p>
+  <p>system_one sends these three questions together. The page reads choices, scores, and nouls.</p>
+  <div class="call-grid">
+    <article>
+      <h3>team · Choice</h3>
+      <p>{escape(TEAM_INSTRUCTIONS)}</p>
+      <ul>{team_rows}</ul>
+    </article>
+    <article>
+      <h3>urgency · Score</h3>
+      <p>{escape(URGENCY_INSTRUCTIONS)}</p>
+      <ul>{urgency_rows}</ul>
+    </article>
+    <article>
+      <h3>refund · Noul</h3>
+      <p>{escape(REFUND_INSTRUCTIONS)}</p>
+      <p>One probability from 0 to 1. A noul has no confidence.</p>
+    </article>
+  </div>
+</section>
+"""
+
+
+def _dials(result: SortedMessage) -> str:
+    limits = result.thresholds or Thresholds()
+    hidden = [
+        _hidden("action", "reroute"),
+        _hidden("message", result.message),
+        _hidden("live", "1" if result.live else "0"),
+        _hidden("model", result.model or ""),
+        _hidden("team_choice", result.team.chosen_label),
+        _hidden("team_confidence", f"{result.team.confidence:.6f}"),
+        _hidden("urgency_score", f"{(result.urgency.score or 0):.6f}"),
+        _hidden("urgency_confidence", f"{result.urgency.confidence:.6f}"),
+        _hidden("refund_noul", f"{result.refund_noul:.6f}"),
+    ]
+    for item in result.team.probabilities:
+        hidden.append(_hidden(f"team_prob_{item.label}", f"{item.value:.6f}"))
+    for index, item in enumerate(result.urgency.probabilities):
+        hidden.append(_hidden(f"urgency_prob_{index}", f"{item.value:.6f}"))
+    return f"""
+<form class="dials" method="post" action="/">
+  {"".join(hidden)}
+  <p class="kicker">Play with the rules</p>
+  <p class="hint">Same answers. No new Jev call.</p>
+  {_dial("Refund cutoff", "refund_queue", limits.refund_queue, "1")}
+  {_dial("Confidence floor", "confidence_floor", limits.confidence_floor, "1")}
+  {_dial("Urgent score", "urgent_score", limits.urgent_score, "2")}
+  <div class="actions">
+    <p class="hint">Release the slider, or press the button.</p>
+    <button type="submit">Apply these rules</button>
+  </div>
+</form>
+"""
+
+
+def _dial(label: str, name: str, value: float, maximum: str) -> str:
+    return f"""
+<label>{escape(label)}
+  <span class="dial-head"><span>0</span><output>{value:.2f}</output><span>{maximum}</span></span>
+  <input type="range" name="{escape(name)}" min="0" max="{maximum}" step="0.01" value="{value:.2f}">
+</label>
+"""
+
+
+def _hidden(name: str, value: str) -> str:
+    return f'<input type="hidden" name="{escape(name)}" value="{escape(value)}">'
 
 
 def _graded(title: str, answer: GradedAnswer, score: float | None) -> str:

@@ -5,7 +5,7 @@ import logging
 from typing import Any, Mapping
 
 from jev_desk.questions import TEAM_CRITERIA, URGENCY_CRITERIA, build_questions
-from jev_desk.routing import route
+from jev_desk.routing import RuleCheck, Thresholds, judge
 
 logger = logging.getLogger("jev_desk")
 
@@ -37,6 +37,8 @@ class SortedMessage:
     team: GradedAnswer
     urgency: GradedAnswer
     refund_noul: float
+    steps: tuple[RuleCheck, ...] = ()
+    thresholds: Thresholds | None = None
 
 
 def sort_message(message: str, client: Any) -> SortedMessage:
@@ -61,8 +63,10 @@ def present(
     *,
     model: str | None,
     live: bool,
+    thresholds: Thresholds | None = None,
 ) -> SortedMessage:
-    queue, reason = route(team, urgency, refund)
+    limits = thresholds or Thresholds()
+    queue, reason, steps = judge(team, urgency, refund, limits)
     return SortedMessage(
         message=message,
         queue=queue,
@@ -72,7 +76,44 @@ def present(
         team=_team_view(team),
         urgency=_urgency_view(urgency),
         refund_noul=float(refund.noul),
+        steps=steps,
+        thresholds=limits,
     )
+
+
+def replay(result: SortedMessage, thresholds: Thresholds) -> SortedMessage:
+    """Route the same answers again. This does not call Jev."""
+    team = _ReplayTeam(result.team)
+    urgency = _ReplayUrgency(result.urgency)
+    refund = _ReplayRefund(result.refund_noul)
+    return present(
+        result.message,
+        team,
+        urgency,
+        refund,
+        model=result.model,
+        live=result.live,
+        thresholds=thresholds,
+    )
+
+
+class _ReplayTeam:
+    def __init__(self, answer: GradedAnswer) -> None:
+        self.choice = answer.chosen_label
+        self.confidence = answer.confidence
+        self.probabilities = {item.label: item.value for item in answer.probabilities}
+
+
+class _ReplayUrgency:
+    def __init__(self, answer: GradedAnswer) -> None:
+        self.score = float(answer.score or 0.0)
+        self.confidence = answer.confidence
+        self.probabilities = {index: item.value for index, item in enumerate(answer.probabilities)}
+
+
+class _ReplayRefund:
+    def __init__(self, noul: float) -> None:
+        self.noul = noul
 
 
 def _team_view(team: Any) -> GradedAnswer:

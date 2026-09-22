@@ -1,7 +1,7 @@
-"""Read a CSV, text file, or PDF into the one customer message.
+"""Read a CSV, text file, or PDF into customer messages.
 
-The file is not stored. Its text is the message, and that message is still
-one system_one call.
+The file is not stored. A text file or a PDF is one message and one call.
+A CSV with several rows is one message per row, and each row is one call.
 """
 
 import csv
@@ -14,6 +14,8 @@ from pathlib import Path
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024
 MAX_PDF_PAGES = 20
 MAX_CSV_ROWS = 200
+MAX_SORT_ROWS = 20
+_MESSAGE_COLUMNS = ("message", "body", "text", "content")
 
 _TEXT_SUFFIXES = {".txt", ".text"}
 
@@ -44,6 +46,22 @@ def parse_submission(content_type: str, body: bytes) -> Submission:
 
     message = (parse_qs(text, keep_blank_values=True).get("message") or [""])[0]
     return Submission(message=message)
+
+
+def messages_in(filename: str, data: bytes) -> list[str]:
+    """Return one string per customer message in the file."""
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise UploadError("That file is too large.")
+    if _kind(filename, data) != "csv":
+        text = extract_text(filename, data)
+        return [text]
+    texts = _row_messages(_csv_rows(data))
+    texts = [text for text in texts if text.strip()]
+    if not texts:
+        raise UploadError("That file has no message text.")
+    if len(texts) > MAX_SORT_ROWS:
+        raise UploadError("That CSV has more than 20 messages. Upload a shorter file.")
+    return texts
 
 
 def extract_text(filename: str, data: bytes) -> str:
@@ -88,7 +106,7 @@ def _plain_text(data: bytes) -> str:
     return _decode(data)
 
 
-def _csv_text(data: bytes) -> str:
+def _csv_rows(data: bytes) -> list[list[str]]:
     try:
         raw = _decode(data)
         sample = raw[:4096]
@@ -109,35 +127,58 @@ def _csv_text(data: bytes) -> str:
         raise
     except csv.Error as exc:
         raise UploadError("That CSV could not be read.") from exc
+    return rows
+
+
+def _csv_text(data: bytes) -> str:
+    return "\n\n".join(_row_messages(_csv_rows(data)))
+
+
+def _row_messages(rows: list[list[str]]) -> list[str]:
     if not rows:
-        return ""
+        return []
+    if len(rows) >= 3 and _header_row(rows[0]):
+        return [_record_text(rows[0], record) for record in rows[1:]]
+    if len(rows) >= 2 and not _header_row(rows[0]):
+        return [_plain_row(row) for row in rows]
     if len(rows) >= 2 and _header_row(rows[0]):
-        headers = rows[0]
-        blocks = []
-        for record in rows[1:]:
-            lines = []
-            for index, header in enumerate(headers):
-                value = record[index].strip() if index < len(record) else ""
-                if value:
-                    lines.append(f"{header}: {value}")
-            for value in record[len(headers) :]:
-                if value.strip():
-                    lines.append(value.strip())
-            if lines:
-                blocks.append("\n".join(lines))
-        return "\n\n".join(blocks)
+        return [_record_text(rows[0], rows[1])]
+    return [_plain_row(rows[0])]
+
+
+def _plain_row(row: list[str]) -> str:
+    return ", ".join(cell for cell in row if cell)
+
+
+def _record_text(headers: list[str], record: list[str]) -> str:
+    lowered = [header.lower() for header in headers]
+    for name in _MESSAGE_COLUMNS:
+        if name in lowered:
+            index = lowered.index(name)
+            value = record[index].strip() if index < len(record) else ""
+            if value:
+                return value
     lines = []
-    for row in rows:
-        kept = [cell for cell in row if cell]
-        if kept:
-            lines.append(", ".join(kept))
-    return "\n\n".join(lines)
+    for index, header in enumerate(headers):
+        value = record[index].strip() if index < len(record) else ""
+        if value:
+            lines.append(f"{header}: {value}")
+    for value in record[len(headers) :]:
+        if value.strip():
+            lines.append(value.strip())
+    return "\n".join(lines)
 
 
 def _header_row(row: list[str]) -> bool:
     if not row or any(not cell for cell in row):
         return False
-    return all(len(cell) <= 40 for cell in row)
+    return all(_header_cell(cell) for cell in row)
+
+
+def _header_cell(cell: str) -> bool:
+    if len(cell) > 40 or any(mark in cell for mark in ".?!"):
+        return False
+    return all(ch.isalnum() or ch in " _-" for ch in cell)
 
 
 def _pdf_text(data: bytes) -> str:

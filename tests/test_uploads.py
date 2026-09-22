@@ -139,8 +139,8 @@ def test_filename_is_escaped():
     html = desk.page_for_submission(
         parse_submission(*reversed(_multipart("", "<script>.txt", b"hello", "text/plain")))
     )
-    assert "<script>" not in html
     assert "From &lt;script&gt;.txt" in html
+    assert "<script>.txt" not in html
 
 
 def test_live_pdf_is_one_call_with_the_extracted_text():

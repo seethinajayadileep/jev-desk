@@ -36,6 +36,21 @@ def answers(
     return team, urgency, refund
 
 
+def test_explain_records_the_rule_that_fired():
+    from jev_desk.routing import Thresholds, judge
+
+    _queue, reason, steps = judge(*answers(noul=0.93))
+    assert reason == "refund requested"
+    assert [step.state for step in steps] == ["fired", "skipped", "skipped", "skipped"]
+    assert "0.93" in steps[0].detail
+    assert "0.70" in steps[0].detail
+
+    _queue, reason, steps = judge(*answers(noul=0.93), Thresholds(refund_queue=0.99))
+    assert reason == "billing team"
+    assert steps[0].state == "passed"
+    assert steps[-1].state == "fired"
+
+
 def test_refund_at_threshold_goes_to_billing():
     assert route(*answers(noul=0.7, choice="sales")) == ("Billing", "refund requested")
 

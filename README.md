@@ -36,6 +36,15 @@ On each result, read the three answer blocks:
 - **Urgency** is a Score on an ordered scale: Can wait is 0, This week is 1, Today is 2. The score is the probability-weighted number. For the first example that is `0.05×0 + 0.18×1 + 0.77×2 = 1.72`. The chosen label is the level with the highest probability.
 - **Refund** is a Noul. One probability from 0 to 1. A noul has no confidence.
 
+Under the answers, the page is a playground:
+
+- **Why this queue** lists the four checks in order, with this message's numbers. The check that fired is marked. Later checks say they were not used.
+- **How the urgency score is made** shows the weighted sum, such as `0.05×0 + 0.18×1 + 0.77×2 = 1.72`.
+- **The one call** shows the Choice, the Score, and the Noul that `system_one` sends together.
+- **Play with the rules** has three sliders: refund cutoff, confidence floor, and urgent score. Release a slider, or press **Apply these rules**. The same answers are routed again. Jev is not called.
+
+Try it on the first example. Refund is 0.93, so Billing wins. Move the refund cutoff above 0.93 and release the slider. The refund check no longer fires, and the team label sends it to Billing for a different reason: billing team.
+
 The stamp **Decided in code** means the queue came from Python. The rules on the empty screen are the same ones in `route()`:
 
 1. Refund probability 0.70 or higher goes to Billing.
@@ -49,11 +58,12 @@ Paste any other sentence and press **Sort this message**. The page says the mess
 
 ### Try a file
 
-Use **Or upload a file**, then sort. A `.txt`, `.csv`, or `.pdf` is read into one message.
+Use **Or upload a file**, then sort. A `.txt` or `.pdf` is one message. A `.csv` with several rows is one message per row, and each row gets its own queue.
 
 - A text file, or a one-line CSV, whose text is exactly one of the four examples gets that example's queue.
-- A CSV with a short header becomes labeled lines, such as `team: billing` and `note: Charged twice`. In sample mode that combined text is not an example, so the queue stays empty and the extracted text is shown.
-- A PDF has to contain selectable text. A scan, a password-protected PDF, a file over 20 pages, or any other file type is not sorted.
+- Put two examples on two lines of a CSV and both queues show up. A row that is not an example stays unsorted in sample mode.
+- A header row such as `message` or `team,note` labels the cells. A column named `message`, `body`, `text`, or `content` is the message. Quote a cell that contains a comma.
+- At most 20 rows are sorted. A PDF has to contain selectable text. A scan, a password-protected PDF, a file over 20 pages, or any other file type is not sorted.
 
 Files are not stored. An upload can be up to 2 MB. The message itself can be up to 8,000 characters.
 
